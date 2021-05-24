@@ -48,7 +48,7 @@ func (cg *CgroupV1) GetBlockIOData(pid int, cgPath string) (*rspec.LinuxBlockIO,
 		}
 	}
 	lb := &rspec.LinuxBlockIO{}
-	names := []string{"weight", "leaf_weight", "weight_device", "leaf_weight_device", "throttle.read_bps_device", "throttle.write_bps_device", "throttle.read_iops_device", "throttle.write_iops_device"}
+	names := []string{"throttle.read_bps_device", "throttle.write_bps_device", "throttle.read_iops_device", "throttle.write_iops_device"}
 	for i, name := range names {
 		fileName := strings.Join([]string{"blkio", name}, ".")
 		filePath := filepath.Join(cg.MountPath, "blkio", cgPath, fileName)
@@ -71,68 +71,68 @@ func (cg *CgroupV1) GetBlockIOData(pid int, cgPath string) (*rspec.LinuxBlockIO,
 			return nil, err
 		}
 		switch i {
-		case 0:
-			res, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 16)
-			if err != nil {
-				return nil, err
-			}
-			weight := uint16(res)
-			lb.Weight = &weight
-		case 1:
-			res, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 16)
-			if err != nil {
-				return nil, err
-			}
-			leafWeight := uint16(res)
-			lb.LeafWeight = &leafWeight
-		case 2:
-			parts := strings.Split(strings.TrimSpace(string(contents)), "\n")
-			for _, part := range parts {
-				elem := strings.Split(part, " ")
-				major, minor, err := getDeviceID(elem[0])
-				if err != nil {
-					return nil, err
-				}
-				res, err := strconv.ParseUint(elem[1], 10, 16)
-				if err != nil {
-					return nil, err
-				}
-				weight := uint16(res)
-				lwd := rspec.LinuxWeightDevice{}
-				lwd.Major = major
-				lwd.Minor = minor
-				lwd.Weight = &weight
-				lb.WeightDevice = append(lb.WeightDevice, lwd)
-			}
-		case 3:
-			parts := strings.Split(strings.TrimSpace(string(contents)), "\n")
-			for _, part := range parts {
-				elem := strings.Split(part, " ")
-				major, minor, err := getDeviceID(elem[0])
-				if err != nil {
-					return nil, err
-				}
-				res, err := strconv.ParseUint(elem[1], 10, 16)
-				if err != nil {
-					return nil, err
-				}
-				leafWeight := uint16(res)
-				exist := false
-				for i, wd := range lb.WeightDevice {
-					if wd.Major == major && wd.Minor == minor {
-						exist = true
-						lb.WeightDevice[i].LeafWeight = &leafWeight
-						break
-					}
-				}
-				if !exist {
-					lwd := rspec.LinuxWeightDevice{}
-					lwd.Major = major
-					lwd.Minor = minor
-					lwd.LeafWeight = &leafWeight
-					lb.WeightDevice = append(lb.WeightDevice, lwd)
-				}
-			}
+		// case 0:
+		// 	res, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 16)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	weight := uint16(res)
+		// 	lb.Weight = &weight
+		// case 1:
+		// 	res, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 16)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	leafWeight := uint16(res)
+		// 	lb.LeafWeight = &leafWeight
+		// case 2:
+		// 	parts := strings.Split(strings.TrimSpace(string(contents)), "\n")
+		// 	for _, part := range parts {
+		// 		elem := strings.Split(part, " ")
+		// 		major, minor, err := getDeviceID(elem[0])
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		// 		res, err := strconv.ParseUint(elem[1], 10, 16)
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		// 		weight := uint16(res)
+		// 		lwd := rspec.LinuxWeightDevice{}
+		// 		lwd.Major = major
+		// 		lwd.Minor = minor
+		// 		lwd.Weight = &weight
+		// 		lb.WeightDevice = append(lb.WeightDevice, lwd)
+		// 	}
+		// case 3:
+		// 	parts := strings.Split(strings.TrimSpace(string(contents)), "\n")
+		// 	for _, part := range parts {
+		// 		elem := strings.Split(part, " ")
+		// 		major, minor, err := getDeviceID(elem[0])
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		// 		res, err := strconv.ParseUint(elem[1], 10, 16)
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		// 		leafWeight := uint16(res)
+		// 		exist := false
+		// 		for i, wd := range lb.WeightDevice {
+		// 			if wd.Major == major && wd.Minor == minor {
+		// 				exist = true
+		// 				lb.WeightDevice[i].LeafWeight = &leafWeight
+		// 				break
+		// 			}
+		// 		}
+		// 		if !exist {
+		// 			lwd := rspec.LinuxWeightDevice{}
+		// 			lwd.Major = major
+		// 			lwd.Minor = minor
+		// 			lwd.LeafWeight = &leafWeight
+		// 			lb.WeightDevice = append(lb.WeightDevice, lwd)
+		// 		}
+		// 	}
 		case 4:
 			parts := strings.Split(strings.TrimSpace(string(contents)), "\n")
 			for _, part := range parts {
